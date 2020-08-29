@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE,
 library(tidyverse)
 library(scales)
 library(lubridate)
+library(countrycode)
 theme_set(theme_light())
 ```
 
@@ -69,7 +70,31 @@ r_downloads_year %>%
     labs(title = "# of R downloads over weeks")
 ```
 
+### Downloads per country
 ```{r}
+r_downloads_year %>% 
+    mutate(country = countrycode(country, "iso2c", "country.name")) %>%
+    filter(!is.na(country)) %>% 
+    count(country, sort = T) %>% 
+    head(16) %>% 
+    mutate(n = n/sum(n),
+           country = fct_reorder(country,n)) %>% 
+    ggplot(aes(country,n)) +
+    geom_col() +
+    coord_flip() +
+    scale_y_continuous(labels = percent_format()) +
+    labs(title = "Which countries install R the most",
+         subtitle = "Over 47% of the R downloads happen from United States",
+         x = "",
+         y = "% downloads")
+```
 
+### Lets see how Rs' different versions downloads has happened over time
+```{r}
+r_downloads_year %>%
+    mutate(version = fct_lump(version, 10)) %>% 
+    count(date, version) %>% 
+    ggplot(aes(date,n, color = version)) +
+        geom_line(size =1)
 ```
 
