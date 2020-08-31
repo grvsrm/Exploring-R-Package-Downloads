@@ -1,43 +1,30 @@
----
-title: "Exploring R Package Downloads from CRAN"
-author: "Gaurav Sharma"
-date: "29/08/2020"
-output: github_document
-editor_options: 
-  chunk_output_type: console
----
+Exploring R Package Downloads from CRAN
+================
+Gaurav Sharma
+29/08/2020
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      cache = TRUE,
-                      message = FALSE,
-                      warning = FALSE,
-                      dpi = 180,
-                      fig.width = 8,
-                      fig.height = 5)
-
-library(tidyverse)
-library(scales)
-library(lubridate)
-library(countrycode)
-theme_set(theme_light())
+``` r
+ttfile <- tidytuesdayR::tt_load("2018-10-30")
 ```
 
-```{r}
-ttfile <- tidytuesdayR::tt_load("2018-10-30")
+    ## 
+    ##  Downloading file 1 of 2: `r_downloads_year.csv`
+    ##  Downloading file 2 of 2: `r-downloads.csv`
+
+``` r
 r_downloads_year_raw <- ttfile$r_downloads_year
 #r_downloads <- ttfile$`r-downloads`
 
 r_downloads_year <- r_downloads_year_raw %>%
   select(-X1) %>%
   mutate(country = countrycode(country, "iso2c", "country.name"))
-  
 ```
 
 ### Downloads over time
 
 ### Daily downloads
-```{r R downloads}
+
+``` r
 r_downloads_year %>%
     count(date) %>% 
     ggplot(aes(date, n)) +
@@ -46,8 +33,11 @@ r_downloads_year %>%
     labs(title = "# of R downloads per day")
 ```
 
+![](index_files/figure-gfm/R%20downloads-1.png)<!-- -->
+
 ### Lets have a look at weekly trend
-```{r}
+
+``` r
 r_downloads_year %>% 
     count(date) %>% 
     mutate(weekday = wday(date,label = T)) %>% 
@@ -59,8 +49,11 @@ r_downloads_year %>%
     labs(title = "# of R downloads on weekdays")
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
 ### Weekly downloads
-```{r}
+
+``` r
 r_downloads_year %>% 
     mutate(week = floor_date(date, "week")) %>% 
     count(week) %>% 
@@ -72,8 +65,11 @@ r_downloads_year %>%
     labs(title = "# of R downloads over weeks")
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
 ### Downloads per country
-```{r}
+
+``` r
 r_downloads_year %>% 
     filter(!is.na(country)) %>% 
     count(country, sort = T) %>% 
@@ -90,8 +86,11 @@ r_downloads_year %>%
          y = "% downloads")
 ```
 
-### Lets see how Rs' different versions downloads has happened over time
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+### Lets see how Rs’ different versions downloads has happened over time
+
+``` r
 r_downloads_year %>%
     mutate(version = fct_lump(version, 10)) %>% 
     count(date, version) %>% 
@@ -99,18 +98,22 @@ r_downloads_year %>%
         geom_line(size =1)
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
 r_downloads_year %>%
   mutate(version = fct_lump(version, 10)) %>%
   count(date, version) %>%
   ggplot(aes(date, n, color = version)) +
   geom_line(size = 1) +
   facet_wrap( ~ version)
-
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
 ### What time of day are people installing R the most
-```{r}
+
+``` r
 r_downloads_year %>% 
   count(hour = hour(time)) %>% 
   ggplot(aes(hour, n)) +
@@ -118,7 +121,9 @@ r_downloads_year %>%
   expand_limits(y = 0)
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
 r_downloads_year %>% 
   filter(!is.na(country)) %>% 
   mutate(country = fct_lump(country, 8)) %>% 
@@ -130,7 +135,9 @@ r_downloads_year %>%
   facet_wrap(~country, scales = "free_y")
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
 r_downloads_year %>%
   filter(!is.na(country)) %>%
   mutate(country = fct_lump(country, 8)) %>%
@@ -143,8 +150,11 @@ r_downloads_year %>%
   facet_wrap( ~ country, scales = "free_y")
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
 ### What operating systems do people use
-```{r}
+
+``` r
 r_downloads_year %>% 
   count(os, sort = T) %>% 
   filter(!is.na(os)) %>% 
@@ -155,7 +165,9 @@ r_downloads_year %>%
   coord_flip()
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
 r_downloads_year %>% 
   filter(!is.na(os),
          !is.na(country)) %>% 
@@ -168,7 +180,9 @@ r_downloads_year %>%
   facet_wrap(~country, scales = "free_y")
 ```
 
-```{r}
+![](index_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
 r_downloads_year %>% 
 #  filter(!is.na(country)) %>% 
   mutate(country = fct_lump(country,8)) %>% 
@@ -179,8 +193,11 @@ r_downloads_year %>%
   expand_limits(y = 0)
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
 # What is the usual pattern of downloading with respect to time
-```{r}
+
+``` r
 r_downloads_year %>% 
   mutate(datetime = as.POSIXlt(date) + time) %>%
   arrange(datetime) %>% 
@@ -195,33 +212,28 @@ r_downloads_year %>%
   geom_vline(xintercept = 86400, lty = 2, color = "red")
 ```
 
+![](index_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
 ### Lets have a look at daily R packages download data
-```{r}
+
+``` r
 #r_package_download <- read_csv("http://cran-logs.rstudio.com/2020/2020-08-29.csv.gz", progress = show_progress())
 #3r_package_download
 ```
 
-#```{r}
-r_package_download %>%
-  filter(country %in% c("US", "IN")) %>%
-  count(country, package, sort = T) %>%
-  pivot_wider(names_from = country, values_from = n) %>%
-  mutate(
-    total = US + IN,
-    US = US / total,
-    IN = IN / total,
-    ratio = US / IN
-  ) %>%
-  filter(!is.na(total)) %>%
-  arrange(desc(ratio)) %>% 
-  filter(ratio < 1)
+\#\`\`\`{r} r\_package\_download %\>% filter(country %in% c(“US”, “IN”))
+%\>% count(country, package, sort = T) %\>% pivot\_wider(names\_from =
+country, values\_from = n) %\>% mutate( total = US + IN, US = US /
+total, IN = IN / total, ratio = US / IN ) %\>% filter(\!is.na(total))
+%\>% arrange(desc(ratio)) %\>% filter(ratio \< 1)
 
-```
+```` 
 
 
 ### There is a package called cranlogs using which we can downloads daily weekly or stats over a period of time related to cran downlaods
 
-```{r}
+
+```r
 library(cranlogs)
 cranlogs::cran_downloads(packages = "R", when = "last-month") %>% 
   mutate(week = floor_date(date, "week"),
@@ -229,13 +241,22 @@ cranlogs::cran_downloads(packages = "R", when = "last-month") %>%
   count(version, week, count) %>% 
   ggplot(aes(week, count, color = version)) +
   geom_line(aes(group = 1))
+````
+
+![](index_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
 cranlogs::cran_top_downloads(when = "last-week", count = 10)
 ```
 
-
-
-
-
-
-
-
+    ##    rank         package  count       from         to
+    ## 1     1        magrittr 830472 2020-08-21 2020-08-27
+    ## 2     2          aws.s3 673817 2020-08-21 2020-08-27
+    ## 3     3 aws.ec2metadata 662503 2020-08-21 2020-08-27
+    ## 4     4       rsconnect 650665 2020-08-21 2020-08-27
+    ## 5     5        jsonlite 424619 2020-08-21 2020-08-27
+    ## 6     6           rlang 367884 2020-08-21 2020-08-27
+    ## 7     7              fs 339514 2020-08-21 2020-08-27
+    ## 8     8         ggplot2 327557 2020-08-21 2020-08-27
+    ## 9     9        devtools 323399 2020-08-21 2020-08-27
+    ## 10   10           vctrs 318673 2020-08-21 2020-08-27
