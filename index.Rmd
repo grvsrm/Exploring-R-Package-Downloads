@@ -26,10 +26,12 @@ theme_set(theme_light())
 ```{r}
 ttfile <- tidytuesdayR::tt_load("2018-10-30")
 r_downloads_year_raw <- ttfile$r_downloads_year
-r_downloads <- ttfile$`r-downloads`
+#r_downloads <- ttfile$`r-downloads`
 
-r_downloads_year <- r_downloads_year_raw %>% 
-    select(-X1)
+r_downloads_year <- r_downloads_year_raw %>%
+  select(-X1) %>%
+  mutate(country = countrycode(country, "iso2c", "country.name"))
+  
 ```
 
 ### Downloads over time
@@ -73,7 +75,6 @@ r_downloads_year %>%
 ### Downloads per country
 ```{r}
 r_downloads_year %>% 
-    mutate(country = countrycode(country, "iso2c", "country.name")) %>%
     filter(!is.na(country)) %>% 
     count(country, sort = T) %>% 
     head(16) %>% 
@@ -97,4 +98,101 @@ r_downloads_year %>%
     ggplot(aes(date,n, color = version)) +
         geom_line(size =1)
 ```
+
+```{r}
+r_downloads_year %>%
+  mutate(version = fct_lump(version, 10)) %>%
+  count(date, version) %>%
+  ggplot(aes(date, n, color = version)) +
+  geom_line(size = 1) +
+  facet_wrap( ~ version)
+
+```
+
+### What time of day are people installing R the most
+```{r}
+r_downloads_year %>% 
+  count(hour = hour(time)) %>% 
+  ggplot(aes(hour, n)) +
+    geom_line(size = 1.5, color = "orange", alpha = 0.6) +
+  expand_limits(y = 0)
+```
+
+```{r}
+r_downloads_year %>% 
+  filter(!is.na(country)) %>% 
+  mutate(country = fct_lump(country, 8)) %>% 
+  count(country,
+        hour = hour(time)) %>% 
+  ggplot(aes(hour, n)) +
+    geom_line(size = 1, color = "violet") +
+  expand_limits(y = 0) +
+  facet_wrap(~country, scales = "free_y")
+```
+
+```{r}
+r_downloads_year %>%
+  filter(!is.na(country)) %>%
+  mutate(country = fct_lump(country, 8)) %>%
+  count(country, date, hour = hour(time)) %>%
+  group_by(country, hour) %>%
+  summarise(avg_hr = mean(n)) %>%
+  ggplot(aes(hour, avg_hr)) +
+  geom_line(size = 1, color = "red", alpha = 0.7) +
+  expand_limits(y = 0) +
+  facet_wrap( ~ country, scales = "free_y")
+```
+
+### What operating systems do people use
+```{r}
+r_downloads_year %>% 
+  count(os, sort = T) %>% 
+  filter(!is.na(os)) %>% 
+  mutate(n = n/sum(n),
+         os = fct_reorder(os,n)) %>% 
+  ggplot(aes(os, n)) +
+  geom_col() +
+  coord_flip()
+```
+
+```{r}
+r_downloads_year %>% 
+  filter(!is.na(os),
+         !is.na(country)) %>% 
+  mutate(country = fct_lump(country,8)) %>% 
+  count(country, os, week = floor_date(date, "week")) %>% 
+  filter(week > min(week)) %>% 
+  ggplot(aes(week, n, color = os)) +
+  geom_line(size =1) +
+  expand_limits(y = 0) +
+  facet_wrap(~country, scales = "free_y")
+```
+
+```{r}
+r_downloads_year %>% 
+#  filter(!is.na(country)) %>% 
+  mutate(country = fct_lump(country,8)) %>% 
+  count(country, week = floor_date(date, "week")) %>% 
+  filter(week > min(week)) %>% 
+  ggplot(aes(week, n, color = country)) +
+  geom_line(size =1) +
+  expand_limits(y = 0)
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
